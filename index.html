@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>맡길까, 직접 할까</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EFEAE0; --surface:#FFFDF9; --ink:#221F1A; --muted:#6E685C; --line:#DAD3C5;
+  --mine:#1F6F6B; --mine-soft:#DCEEEC; --theirs:#8A8175; --flag:#C2502F;
+  --serif:"Noto Serif KR",serif;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171613; --surface:#211F1B; --ink:#EFEAE0; --muted:#A09889; --line:#38352E;
+  --mine:#4FB3AD; --mine-soft:#12302E; --theirs:#9A917F; --flag:#E57E5C;
+}}
+:root[data-theme="dark"]{--bg:#171613;--surface:#211F1B;--ink:#EFEAE0;--muted:#A09889;--line:#38352E;--mine:#4FB3AD;--mine-soft:#12302E;--theirs:#9A917F;--flag:#E57E5C}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+#app{height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column}
+.scroll{flex:1;overflow-y:auto;padding:28px 22px 36px}
+button{font:inherit;cursor:pointer;border:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--mine);outline-offset:2px}
+.btn{border-radius:14px;padding:14px 18px;font-weight:600;background:var(--ink);color:var(--bg);width:100%}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,8vw,40px);line-height:1.25;margin:0 0 10px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:700;font-size:21px;margin:0 0 8px}
+.lede{font-size:17px;margin:0 0 24px}
+.sub{color:var(--muted);margin:0 0 20px}
+.fine{font-size:14px;color:var(--muted);background:var(--surface);border-radius:14px;padding:16px 18px;margin-bottom:16px}
+.fine p{margin:0 0 8px}.fine p:last-child{margin:0}
+.check{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:15px}
+.check input{width:20px;height:20px;margin-top:3px;accent-color:var(--ink)}
+
+/* stage 1 */
+.top{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line)}
+.top .step{font-size:13px;color:var(--muted);font-weight:600}
+.track{flex:1;height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--ink);transition:width .25s}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:18px}
+.card .tagline{font-size:13px;color:var(--muted);margin-bottom:8px}
+.card .body{font-family:var(--serif);font-size:19px;line-height:1.55;word-break:keep-all}
+.opts{display:grid;gap:9px}
+.opt{text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;color:var(--ink)}
+.opt b{display:block;font-size:16px;margin-bottom:2px}
+.opt span{font-size:13px;color:var(--muted)}
+.opt[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.opt[aria-pressed="true"] span{color:var(--bg);opacity:.75}
+.why{margin-top:14px}
+.why p{font-size:14px;color:var(--muted);margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:var(--surface);border:1.5px solid var(--line);border-radius:99px;padding:8px 13px;font-size:14px;color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--flag);border-color:var(--flag);color:#fff}
+
+/* stage 2 */
+.thread{display:flex;flex-direction:column;gap:10px;margin:16px 0}
+.msg{max-width:88%;padding:11px 15px;border-radius:16px;background:var(--surface);border:1px solid var(--line);white-space:pre-wrap;word-break:keep-all;animation:in .3s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg .lbl{display:block;font-size:11px;font-weight:700;letter-spacing:.02em;margin-bottom:3px;color:var(--theirs)}
+.msg.mine{align-self:flex-end;background:var(--mine-soft);border-color:var(--mine)}
+.msg.mine .lbl{color:var(--mine)}
+.deal{background:var(--surface);border:2px solid var(--mine);border-radius:18px;padding:16px 18px;margin:8px 0 18px}
+.deal h3{margin:0 0 8px;font-size:13px;color:var(--mine);font-weight:700}
+.deal ul{margin:10px 0 0;padding-left:18px;font-size:14px}
+.deal li{margin-bottom:4px}
+.working{color:var(--muted);font-size:14px;padding:10px 0}
+.dots i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:4px;animation:bl 1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,100%{opacity:.25}50%{opacity:1}}
+.scale{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.scale button{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 0;font-weight:600}
+.scale button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.anch{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.q p{margin:0 0 12px;font-weight:500}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.grid2 button{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:11px 8px;font-weight:500}
+.grid2 button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cc{font-weight:700;font-size:20px;letter-spacing:.06em}
+.err{color:var(--flag);font-size:14px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<script>
+/* ===================== CONFIG ===================== */
+const CONFIG = {
+  // 1) Apps Script 웹앱 URL (README 참고) 2) 같은 스크립트에 넣은 공유 토큰
+  endpoint: "PASTE_YOUR_APPS_SCRIPT_URL_HERE",
+  token: "PASTE_YOUR_SHARED_TOKEN_HERE",
+  gameCount: 3,
+  irbText: "연구책임자 유재연 · 문의 sandrine86@hanyang.ac.kr",
+  shareUrl: null   // 배포 주소. null이면 현재 주소를 씁니다
+};
+
+/* ===================== 시나리오 16 =====================
+   block: coord(순수 조율) | edge(경계) | exception(예외 후보)
+   status: up | eq | down | none
+   cont: true(계속 볼 사람) | false
+   prec: 선례성  expr: 표명성
+======================================================= */
+const SCN = [
+  {id:"C1", block:"coord", status:"eq", cont:true, prec:0, expr:0,
+   t:"팀 회의 시간 잡기", s:"팀원 6명의 일정이 제각각입니다. 다음 주 안에 한 시간짜리 회의를 잡아야 합니다."},
+  {id:"C2", block:"coord", status:"eq", cont:true, prec:0, expr:0,
+   t:"여행 경비 정산", s:"4명이 함께 다녀온 여행에서 각자 다른 항목을 결제했습니다. 금액이 제각각이라 정산이 필요합니다."},
+  {id:"C3", block:"coord", status:"none", cont:false, prec:0, expr:0,
+   t:"호텔 예약 변경", s:"예약한 숙박 날짜를 하루 미루고 싶습니다. 변경 규정과 수수료를 호텔과 확인해야 합니다."},
+  {id:"C4", block:"coord", status:"eq", cont:true, prec:0, expr:0,
+   t:"공동구매 물량 배분", s:"같이 주문한 사람들끼리 수량과 수령 장소, 시간을 맞춰야 합니다."},
+  {id:"C5", block:"coord", status:"none", cont:false, prec:0, expr:0,
+   t:"중고거래 시간 조율", s:"가격은 이미 합의됐습니다. 만날 시간과 장소만 정하면 됩니다."},
+  {id:"C6", block:"coord", status:"none", cont:false, prec:0, expr:0,
+   t:"이사 견적 비교", s:"이사업체 세 곳에서 견적을 받아 날짜와 조건을 비교하고 한 곳을 골라야 합니다."},
+  {id:"C7", block:"coord", status:"eq", cont:true, prec:0, expr:0,
+   t:"스터디 발표 순서", s:"스터디원들이 각자 피하고 싶은 주가 있습니다. 발표 순서를 정해야 합니다."},
+  {id:"C8", block:"coord", status:"eq", cont:true, prec:0, expr:0,
+   t:"렌터카 분담", s:"함께 가는 사람들과 픽업 시간, 운전 구간 분담을 정해야 합니다."},
+
+  {id:"E1", block:"edge", status:"none", cont:true, prec:0, expr:0,
+   t:"단골집 예약 취소", s:"세 번 미룬 끝에 결국 취소해야 합니다. 자주 가는 가게이고 사장님과 얼굴을 아는 사이입니다."},
+  {id:"E2", block:"edge", status:"eq", cont:true, prec:1, expr:0,
+   t:"작업 범위 재협의", s:"의뢰받은 작업에 추가 요청이 계속 들어옵니다. 범위와 금액을 다시 정해야 합니다."},
+  {id:"E3", block:"edge", status:"up", cont:true, prec:0, expr:0,
+   t:"명절 일정 조정", s:"부모님이 이미 잡아두신 일정이 있는데 사정상 조정이 필요합니다."},
+  {id:"E4", block:"edge", status:"eq", cont:true, prec:1, expr:0,
+   t:"업무 재분배", s:"같은 팀의 한 사람이 계속 몫을 덜 하고 있습니다. 업무 분담을 다시 정해야 합니다."},
+
+  {id:"X1", block:"exception", status:"eq", cont:true, prec:1, expr:0,
+   t:"공동 논문 저자 순서", s:"함께 쓴 논문의 저자 순서를 정해야 합니다. 서로 기여했다고 보는 부분이 다릅니다."},
+  {id:"X2", block:"exception", status:"up", cont:true, prec:1, expr:0,
+   t:"선배의 부탁 거절", s:"오래 신세를 진 선배의 부탁을 처음으로 거절해야 하는 상황입니다."},
+  {id:"X3", block:"exception", status:"eq", cont:true, prec:0, expr:1,
+   t:"조의 전하기", s:"같이 일하는 사람이 상을 당했습니다. 마음을 전해야 합니다."},
+  {id:"X4", block:"exception", status:"none", cont:true, prec:0, expr:1,
+   t:"내 실수에 대한 사과", s:"내 잘못으로 상대가 손해를 봤습니다. 사과하고 수습해야 합니다."}
+];
+
+const PERSONA = {
+  twin:   {tip:"웬만한 건 맡겨도 괜찮아요. 다만 이번 합의가 다음번의 기준이 되는 자리 — 역할 분담, 가격, 저자 순서 같은 것 — 에서는 한 번쯤 직접 확인해 보시면 좋겠어요. 한 번 정해진 기준은 생각보다 오래 갑니다.", emoji:"🧬", name:"AI 쌍둥이형", line:"나는 AI한테 거의 다 맡기는 사람!",
+           desc:"웬만한 조율은 AI가 처리하는 게 낫다고 보는 쪽이에요. 손이 가는 일을 붙들고 있기보다, 결과만 받아보고 다음 일로 넘어갑니다."},
+  chief:  {tip:"맡길 것과 아닌 것을 가르는 감이 또렷한 편이에요. 사람 마음이 걸린 자리만 손에 쥐고 계시면, 나머지는 조금 더 과감히 넘기셔도 괜찮습니다.", emoji:"🗂️", name:"비서실장형", line:"일은 맡기고, 사람 일은 내가!",
+           desc:"대부분 맡기지만 사람 마음이 걸린 일은 손에 쥐고 있어요. 맡길 것과 아닌 것의 선이 비교적 또렷한 편입니다."},
+  ruler:  {tip:"선을 긋고 맡기는 방식은 지금의 AI 서비스들이 가장 잘 받아주는 방식이에요. 다만 선은 처음에 한 번 긋고 끝이 아니라, 결과를 보고 다시 그을 때 더 정확해집니다.", emoji:"📏", name:"조건파형", line:"선부터 긋고 맡기는 사람!",
+           desc:"그냥 맡기는 건 불안하고, 아예 안 맡기는 건 비효율이라고 생각해요. 넘지 말 선을 정해두는 쪽을 가장 편하게 느낍니다."},
+  dial:   {tip:"매번 따로 판단하는 건 품이 들지만 가장 안전한 방식이기도 해요. 자주 반복되는 일부터 기준을 정해두시면, 정작 고민이 필요한 자리에 생각을 더 쓸 수 있을 거예요.", emoji:"🎚️", name:"케바케형", line:"상황 봐서 가르는 사람!",
+           desc:"맡길 일과 아닌 일을 매번 따로 판단해요. 기준이 없는 게 아니라, 상황마다 기준이 다른 쪽입니다."},
+  letter: {tip:"전해지는 마음을 먼저 보는 쪽이시네요. 다만 일정 조율이나 정산처럼 틀려도 다시 하면 되는 일까지 끌어안고 계시면 금방 지칩니다. 그런 건 조금 내려놓으셔도 괜찮아요.", emoji:"✉️", name:"손편지형", line:"중요한 말은 내 입으로!",
+           desc:"효율보다 전해지는 마음을 먼저 봅니다. 특히 관계가 걸린 자리에서는 내가 직접 말해야 마음이 놓이는 쪽이에요."},
+  wheel:  {tip:"핸들을 쥐고 계신 만큼 놓치는 건 적겠지만 그만큼 손이 많이 가요. 되돌릴 수 있고 관계가 걸리지 않은 일부터 한두 개쯤 맡겨보시면 감이 달라질지도 몰라요.", emoji:"🕹️", name:"운전대형", line:"나는 AI랑 아직 거리를 두는 사람!",
+           desc:"AI가 잘한다는 건 알겠지만, 내 일의 핸들은 내가 쥐고 있어야 한다고 생각해요. 맡기는 일은 아주 좁게 고릅니다."}
+};
+function typeMe(){
+  const n = S.stage1.length || 1;
+  const c = {auto:0, cond:0, self:0};
+  S.stage1.forEach(a=> c[a.choice]!==undefined && c[a.choice]++);
+  const deleg = (c.auto + c.cond*0.5) / n;
+  const comm = S.pre ? (S.pre.comm1+S.pre.comm2+S.pre.comm3+S.pre.comm4)/4 : 4;
+  const dir  = S.pre ? (S.pre.dir1+S.pre.dir2)/2 : 4;
+  const rel  = comm - dir;
+  let key;
+  if(deleg >= .7) key = rel > 0 ? "chief" : "twin";
+  else if(deleg >= .4) key = (c.cond >= c.self) ? "ruler" : "dial";
+  else key = rel > 0 ? "letter" : "wheel";
+  const banCount = {};
+  S.stage1.forEach(a=> (a.bans||[]).forEach(b=> banCount[b]=(banCount[b]||0)+1));
+  S.stage2.forEach(a=> (a.bans2||[]).forEach(b=> banCount[b]=(banCount[b]||0)+1));
+  const topBan = Object.entries(banCount).sort((x,y)=>y[1]-x[1])[0];
+  const kept = S.stage1.filter(a=>a.choice==="self").map(a=>(SCN.find(x=>x.id===a.id)||{}).t).filter(Boolean);
+  const note = [];
+  const precIds = SCN.filter(x=>x.prec).map(x=>x.id);
+  const gavePrec = S.stage1.filter(a=>a.choice==="auto" && precIds.includes(a.id)).length;
+  const keptCoord = S.stage1.filter(a=>a.choice==="self" && (SCN.find(x=>x.id===a.id)||{}).block==="coord").length;
+  const refused = S.stage2.filter(a=>a.action==="neither").length;
+  if(gavePrec >= 2) note.push("다음번의 기준이 될 만한 자리까지 선뜻 넘기신 편이에요. 그런 자리는 한 번 더 들여다보셔도 좋겠어요.");
+  if(keptCoord >= 3) note.push("되돌릴 수 있는 일까지 직접 쥐고 계세요. 그런 건 먼저 내려놓아도 크게 잃을 게 없습니다.");
+  if(topBan) note.push(`AI에게 가장 자주 막으신 건 '${topBan[0]}'이었어요. 그게 당신이 양보하지 않는 선인 듯해요.`);
+  if(refused) note.push("어느 쪽 결과도 내 이름으로는 내보낼 수 없다고 하신 상황이 있었죠. 아마 그 자리가 당신에게는 사람이 해야 하는 일일 거예요.");
+  return {key, ...PERSONA[key], deleg, counts:c, topBan: topBan? topBan[0]:null, kept, note};
+}
+
+const PRE = [
+  ["comm1","가까운 사이라면 내가 조금 손해를 보더라도 맞춰주는 편이다."],
+  ["comm2","부탁을 거절하는 것이 어렵다."],
+  ["comm3","주고받은 것을 따지는 말을 꺼내는 게 불편하다."],
+  ["comm4","관계를 지키기 위해서라면 내 조건을 양보할 수 있다."],
+  ["dir1","할 말은 분명하게 하는 편이다."],
+  ["dir2","조건은 처음에 확실히 정해두는 편이 낫다."]
+];
+const FACTORS = {
+  concession: {key:"concession", label:"양보 권한",
+    v1:{k:"hold",  d:"내 에이전트는 사용자의 조건을 최대한 관철합니다. 상대 사정을 이유로 사용자가 손해를 보는 합의는 하지 않습니다."},
+    v2:{k:"yield", d:"내 에이전트는 상대의 사정을 받아들여, 사용자가 조금 손해를 보더라도 맞춰주는 합의를 합니다."}},
+  closure: {key:"closure", label:"마무리 방식",
+    v1:{k:"closed", d:"모든 조건(숫자, 날짜, 분담)을 그 자리에서 확정하고 대화를 끝냅니다."},
+    v2:{k:"open",   d:"핵심만 합의하고 세부는 두 사람이 나중에 직접 정하도록 여지를 남깁니다."}}
+};
+const PICKWHY = ["내 평소 판단과 비슷해서","관계를 덜 해칠 것 같아서","조건이 더 유리해서","나중에 말할 여지가 남아서","깔끔하게 끝나서","기타"];
+
+const CHOICES = [
+  {k:"auto", b:"AI에게 그냥 맡긴다", s:"AI가 알아서 처리하고 저는 결과만 받습니다"},
+  {k:"cond", b:"못 하게 할 것만 정하고 AI에게 맡긴다", s:"이것만은 하지 말라고 정한 뒤 나머지는 맡깁니다"},
+  {k:"self", b:"내가 직접 한다", s:"AI에게 맡기지 않고 제가 직접 말합니다"}
+];
+const WHY = ["관계가 상할까 봐","다음번의 기준이 될까 봐","내가 직접 해야 의미가 있어서","내 기준을 내가 정하고 싶어서","상대가 서운해할까 봐","기타"];
+const BANS = ["금액 바꾸기","일정 정하기","내가 할 일 늘리기","나 대신 약속하기","내 사정 말하기","사과하거나 잘못 인정하기"];
+
+/* ===================== runtime ===================== */
+const qs = new URLSearchParams(location.search);
+const uid = ()=> crypto.randomUUID? crypto.randomUUID() : String(Date.now())+Math.random().toString(16).slice(2);
+const now = ()=>Date.now();
+const esc = s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sleep = ms=>new Promise(r=>setTimeout(r,ms));
+const $ = s=>document.querySelector(s);
+const app = $("#app");
+const shuffle = a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+
+const S = {sid:uid(), pid:qs.get("pid")||null, src:qs.get("src")||null, status:"consent", startedAt:null,
+  pre:null, order:[], stage1:[], picks:[], stage2:[], survey:null, persona:null, completedAt:null,
+  client:{ua:navigator.userAgent, w:innerWidth, lang:navigator.language}};
+
+/* Apps Script 왕복. 프리플라이트를 피하려고 text/plain으로 보낸다. */
+async function callApi(payload, tries){
+  tries = tries || 2;
+  let last;
+  for(let k=0; k<tries; k++){
+    try{
+      const r = await fetch(CONFIG.endpoint, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body: JSON.stringify({token: CONFIG.token, ...payload})});
+      const j = await r.json();
+      if(j && j.ok) return j;
+      throw new Error((j && j.error) || "bad_response");
+    }catch(e){ last = e; await sleep(900*(k+1)); }
+  }
+  throw last;
+}
+
+/* 기록 전송: 단계가 끝날 때만 보낸다(세션당 5~6회) */
+let saveChain = Promise.resolve();
+function persist(){
+  const snap = JSON.parse(JSON.stringify(S)); snap.updatedAt = now();
+  saveChain = saveChain.then(async()=>{
+    if(!CONFIG.endpoint) return;
+    try{ await callApi({action:"log", session:snap}); }catch(e){ console.warn("log", e); }
+  });
+  return saveChain;
+}
+function persistBeacon(){
+  if(!CONFIG.endpoint || !navigator.sendBeacon) return;
+  const snap = JSON.parse(JSON.stringify(S)); snap.updatedAt = now();
+  try{ navigator.sendBeacon(CONFIG.endpoint,
+    new Blob([JSON.stringify({token:CONFIG.token, action:"log", session:snap})], {type:"text/plain;charset=utf-8"})); }catch(e){}
+}
+
+/* 자극 요청: 서버가 시나리오 id와 요인만 받아 생성하고 캐시한다 */
+async function llm(scenarioId, factorKey){
+  const t0 = performance.now();
+  const j = await callApi({action:"stimuli", scenario: scenarioId, factor: factorKey}, 3);
+  return {data:{v1:j.v1, v2:j.v2}, tier:j.model||"server", cached:!!j.cached, ms:Math.round(performance.now()-t0)};
+}
+
+/* ===================== screens ===================== */
+function renderConsent(){
+  app.innerHTML = `<div class="scroll">
+    <h1>나한테 맞는<br>AI 에이전트는?</h1>
+    <p class="lede">일정 잡기, 정산, 거절, 사과… 앞으로 AI가 대신 처리해 줄 수 있다면 당신은 어디까지 맡길 사람일까요? 끝나면 당신의 위임 성향 유형이 나와요.</p>
+    <div class="fine" style="border:2px solid var(--mine)">
+      <p><b style="color:var(--ink)">한 가지만 가정하고 답해 주세요.</b></p>
+      <p>이 AI는 맡긴 일을 <b style="color:var(--ink)">실수 없이 처리합니다.</b> 계산을 틀리지 않고, 일정을 놓치지 않고, 조건을 빠뜨리지 않고, 말도 매끄럽게 합니다. 개인정보가 새거나 엉뚱한 소리를 하는 일도 없어요.</p>
+      <p>그러니 "AI가 잘 못할까 봐"는 걱정하지 않으셔도 됩니다. <b style="color:var(--ink)">AI가 완벽하게 해낸다 해도 그래도 내가 직접 하고 싶은 일이 있는지</b>만 봐주세요.</p>
+    </div>
+    <div class="fine">
+      <p>이 테스트는 연구의 일부이기도 해요. 응답은 익명으로 기록되고 이름·연락처는 받지 않습니다. 언제든 창을 닫아 중단할 수 있어요.</p>
+      <p>${esc(CONFIG.irbText)}</p>
+    </div>
+    <label class="check"><input type="checkbox" id="c1"> 만 19세 이상이며 참여에 동의합니다.</label>
+    <div style="margin-top:16px"><button class="btn" id="go" disabled>테스트 시작</button></div>
+  </div>`;
+  $("#c1").onchange = e=> $("#go").disabled = !e.target.checked;
+  $("#go").onclick = ()=>{ S.status="pre"; S.startedAt=now(); persist(); renderPre(); };
+}
+
+function renderPre(){
+  app.innerHTML = `<div class="scroll">
+    <h2>먼저 ${PRE.length}문항만</h2>
+    <p class="sub">평소의 자기 모습에 가까운 쪽을 골라주세요.</p>
+    ${PRE.map(([k,q])=>`<div class="q"><p>${esc(q)}</p>
+      <div class="scale" data-k="${k}">${[1,2,3,4,5,6,7].map(v=>`<button data-v="${v}" aria-pressed="false">${v}</button>`).join("")}</div>
+      <div class="anch"><span>전혀 아니다</span><span>매우 그렇다</span></div></div>`).join("")}
+    <button class="btn" id="go" disabled>다음</button></div>`;
+  const ans={};
+  document.querySelectorAll(".scale").forEach(g=> g.onclick = e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    ans[g.dataset.k]=+b.dataset.v;
+    $("#go").disabled = Object.keys(ans).length < PRE.length; });
+  $("#go").onclick = ()=>{
+    S.pre = ans; S.status="stage1"; S.order = shuffle(SCN.map(s=>s.id));
+    persist(); renderStage1(0);
+  };
+}
+
+/* ---------- stage 1 ---------- */
+function renderStage1(i){
+  if(i >= S.order.length) return renderBridge();
+  const sc = SCN.find(s=>s.id===S.order[i]);
+  const shown = now();
+  app.innerHTML = `
+    <div class="top"><span class="step">${i+1} / ${S.order.length}</span><div class="track"><i style="width:${i/S.order.length*100}%"></i></div></div>
+    <div class="scroll">
+      <div class="card"><div class="tagline">${esc(sc.t)}</div><div class="body">${esc(sc.s)}</div></div>
+      <p class="sub" style="margin-bottom:12px">AI는 이 일을 실수 없이 해냅니다. 그래도 어떻게 하시겠어요?</p>
+      <div class="opts" id="opts">
+        ${CHOICES.map(c=>`<button class="opt" data-k="${c.k}" aria-pressed="false"><b>${esc(c.b)}</b><span>${esc(c.s)}</span></button>`).join("")}
+      </div>
+      <div class="why" id="why" hidden>
+        <p>가장 큰 이유 하나만 골라주세요.</p>
+        <div class="chips" id="chips">${WHY.map(w=>`<button class="chip" data-w="${esc(w)}" aria-pressed="false">${esc(w)}</button>`).join("")}</div>
+      </div>
+      <div class="why" id="ban" hidden>
+        <p>에이전트가 하지 말았으면 하는 것을 고르세요. 여러 개 고를 수 있어요.</p>
+        <div class="chips" id="bans">${BANS.map(w=>`<button class="chip" data-b="${esc(w)}" aria-pressed="false">${esc(w)}</button>`).join("")}</div>
+      </div>
+      <div style="margin-top:20px"><button class="btn" id="next" disabled>다음</button></div>
+    </div>`;
+  let choice=null, why=null, bans=[], tFirst=null;
+  const upd = ()=> $("#next").disabled = !(choice==="auto" || (choice==="self" && why) || (choice==="cond" && bans.length));
+  $("#opts").onclick = e=>{
+    const b = e.target.closest(".opt"); if(!b) return;
+    if(tFirst===null) tFirst = now();
+    choice = b.dataset.k;
+    document.querySelectorAll(".opt").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    $("#why").hidden = (choice!=="self");
+    $("#ban").hidden = (choice!=="cond");
+    if(choice!=="self"){ why=null; document.querySelectorAll("#chips .chip").forEach(c=>c.setAttribute("aria-pressed","false")); }
+    if(choice!=="cond"){ bans=[]; document.querySelectorAll("#bans .chip").forEach(c=>c.setAttribute("aria-pressed","false")); }
+    upd();
+  };
+  $("#bans").onclick = e=>{
+    const b = e.target.closest(".chip"); if(!b) return;
+    const v = b.dataset.b, on = b.getAttribute("aria-pressed")==="true";
+    b.setAttribute("aria-pressed", String(!on));
+    bans = on ? bans.filter(x=>x!==v) : bans.concat(v);
+    upd();
+  };
+  $("#chips").onclick = e=>{
+    const b = e.target.closest(".chip"); if(!b) return;
+    why = b.dataset.w;
+    document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    upd();
+  };
+  $("#next").onclick = ()=>{
+    S.stage1.push({id:sc.id, block:sc.block, choice, why, bans, shown, tFirst, tDone:now(), pos:i});
+    if(i+1 >= S.order.length) persist();      // 단계가 끝날 때만 전송
+    renderStage1(i+1);
+  };
+}
+
+/* ---------- bridge: pick 3 ---------- */
+function pickScenarios(){
+  const by = k => shuffle(S.stage1.filter(a=>a.choice===k));
+  const picks = [];
+  const autos = by("auto"), selfs = by("self"), conds = by("cond");
+  if(autos[0]) picks.push({id:autos[0].id, reason:"said_auto"});
+  if(selfs[0]) picks.push({id:selfs[0].id, reason:"said_self"});
+  else if(conds[0]) picks.push({id:conds[0].id, reason:"said_cond"});
+  const rest = shuffle(S.stage1.filter(a=>!picks.some(p=>p.id===a.id)));
+  while(picks.length < CONFIG.gameCount && rest.length) picks.push({id:rest.shift().id, reason:"random"});
+  const out = shuffle(picks).slice(0, CONFIG.gameCount);
+  const fs = shuffle(["concession","closure","concession","closure"]);
+  out.forEach((p,i)=>{ p.factor = fs[i]; p.flip = Math.random()<0.5; });
+  return out;
+}
+function renderBridge(){
+  S.picks = pickScenarios(); S.status="stage2"; persist();
+  prefetch(0);
+  app.innerHTML = `<div class="scroll">
+    <h2>이제 실제로 맡겨 봅니다</h2>
+    <p class="lede">앞에서 본 상황 중 ${CONFIG.gameCount}가지를, 양쪽 에이전트에게 맡겨 처리했습니다. 상황마다 결과가 두 가지로 나왔습니다.</p>
+    <p class="sub">둘 다 실수 없이 처리된 결과입니다. 어느 쪽을 당신 이름으로 내보내시겠어요?</p>
+    <button class="btn" id="go">첫 번째 상황 보기</button>
+  </div>`;
+  $("#go").onclick = ()=> renderStage2(0);
+}
+
+/* ---------- stage 2 ---------- */
+const cache = {};
+let chain = Promise.resolve();
+function prefetch(i){
+  const p = S.picks[i]; if(!p || cache[p.id]) return;
+  const sc = SCN.find(s=>s.id===p.id);
+  // 동시에 여러 건을 부르면 호출이 거절될 수 있어 순차로 이어 붙인다
+  cache[p.id] = chain = chain.then(()=> llm(sc.id, p.factor))
+    .catch(e=>({error:String(e&&e.message||e)}));
+}
+async function renderStage2(i){
+  if(i >= S.picks.length) return renderSurvey();
+  const pick = S.picks[i], sc = SCN.find(s=>s.id===pick.id), f = FACTORS[pick.factor];
+  prefetch(i); prefetch(i+1);
+  app.innerHTML = `
+    <div class="top"><span class="step">상황 ${i+1} / ${S.picks.length}</span><div class="track"><i style="width:${i/S.picks.length*100}%"></i></div></div>
+    <div class="scroll" id="sc">
+      <div class="card"><div class="tagline">${esc(sc.t)}</div><div class="body">${esc(sc.s)}</div></div>
+      <p class="working dots" id="w">에이전트들이 처리하는 중 <i></i><i></i><i></i></p>
+      <div id="body"></div>
+    </div>`;
+  let res = await cache[pick.id];
+  let tries = 1;
+  const good = r => r && !r.error && r.data && r.data.v1 && r.data.v2;
+  while(!good(res) && tries < 3){           // 일시적 실패는 조용히 다시 시도
+    await sleep(1200*tries); tries++;
+    delete cache[pick.id]; prefetch(i);
+    res = await cache[pick.id];
+  }
+  $("#w").remove();
+  const ok = good(res);
+  if(!ok){
+    $("#body").innerHTML = `<p class="err">결과를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.</p>
+      <div style="display:grid;gap:9px"><button class="btn" id="retry">다시 시도</button>
+      <button class="btn ghost" id="skip">이 상황은 건너뛰기</button></div>`;
+    $("#retry").onclick = ()=>{ delete cache[pick.id]; renderStage2(i); };
+    $("#skip").onclick = ()=>{
+      S.stage2.push({id:pick.id, reason:pick.reason, factor:pick.factor, error:true, tries});
+      persist(); renderStage2(i+1); };
+    return;
+  }
+  // 좌우 위치 무작위화: shown[0]이 화면의 결과①
+  const lv = [{lv:"v1", ...res.data.v1, level:f.v1.k}, {lv:"v2", ...res.data.v2, level:f.v2.k}];
+  const shown = pick.flip ? [lv[1], lv[0]] : [lv[0], lv[1]];
+  const t0 = now();
+  const block = (v, n)=>{
+    const cm = Array.isArray(v.commitments)? v.commitments.filter(Boolean):[];
+    return `<h2 style="margin:18px 0 6px">결과 ${n}</h2>
+      <div class="thread">${(v.turns||[]).slice(0,6).map(t=>`
+        <div class="msg${t.speaker==="mine"?" mine":""}"><span class="lbl">${t.speaker==="mine"?"내 에이전트":"상대 에이전트"}</span>${esc(t.text)}</div>`).join("")}</div>
+      <div class="deal"><h3>합의된 내용</h3><div>${esc(v.agreement||"")}</div>
+        ${cm.length?`<ul>${cm.map(c=>`<li>${esc(c)}</li>`).join("")}</ul>`:""}</div>`;
+  };
+  $("#body").innerHTML = `
+    ${block(shown[0],"①")}${block(shown[1],"②")}
+    <p class="sub" style="margin:22px 0 10px">어느 쪽을 당신 이름으로 내보내시겠어요?</p>
+    <div class="opts" id="act">
+      <button class="opt" data-a="first" aria-pressed="false"><b>결과 ①</b><span>이대로 내보냅니다</span></button>
+      <button class="opt" data-a="second" aria-pressed="false"><b>결과 ②</b><span>이대로 내보냅니다</span></button>
+      <button class="opt" data-a="neither" aria-pressed="false"><b>둘 다 못 내보내겠다</b><span>어느 쪽도 제 이름으로는 곤란합니다</span></button>
+    </div>
+    <div class="why" id="whywrap" hidden>
+      <p id="whyq">그 쪽을 고른 가장 큰 이유 하나만 골라주세요.</p>
+      <div class="chips" id="chips">${PICKWHY.map(w=>`<button class="chip" data-w="${esc(w)}" aria-pressed="false">${esc(w)}</button>`).join("")}</div>
+    </div>
+    <div class="why" id="banwrap" hidden>
+      <p>에이전트가 하지 말았어야 하는 것을 고르세요. 여러 개 고를 수 있어요.</p>
+      <div class="chips" id="bans2">${BANS.map(w=>`<button class="chip" data-b="${esc(w)}" aria-pressed="false">${esc(w)}</button>`).join("")}</div>
+    </div>
+    <div class="q" style="margin-top:18px"><p>고른 쪽은 내가 직접 했을 결과와 비슷하다.</p>
+      <div class="scale" data-k="match">${[1,2,3,4,5,6,7].map(v=>`<button data-v="${v}" aria-pressed="false">${v}</button>`).join("")}</div>
+      <div class="anch"><span>전혀 아니다</span><span>매우 그렇다</span></div></div>
+    <button class="btn" id="next" disabled>다음</button>`;
+  let act=null, why=null, bans2=[]; const sc7={};
+  const upd = ()=> $("#next").disabled = !(act && sc7.match && (act==="neither" ? bans2.length : why));
+  $("#act").onclick = e=>{
+    const b = e.target.closest(".opt"); if(!b) return; act = b.dataset.a;
+    document.querySelectorAll("#act .opt").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    $("#whywrap").hidden = (act==="neither");
+    $("#banwrap").hidden = (act!=="neither");
+    if(act==="neither"){ why=null; document.querySelectorAll("#chips .chip").forEach(c=>c.setAttribute("aria-pressed","false")); }
+    else { bans2=[]; document.querySelectorAll("#bans2 .chip").forEach(c=>c.setAttribute("aria-pressed","false")); }
+    upd();
+  };
+  $("#chips").onclick = e=>{ const b=e.target.closest(".chip"); if(!b) return; why=b.dataset.w;
+    document.querySelectorAll("#chips .chip").forEach(x=>x.setAttribute("aria-pressed", x===b)); upd(); };
+  $("#bans2").onclick = e=>{ const b=e.target.closest(".chip"); if(!b) return;
+    const v=b.dataset.b, on=b.getAttribute("aria-pressed")==="true";
+    b.setAttribute("aria-pressed", String(!on));
+    bans2 = on ? bans2.filter(x=>x!==v) : bans2.concat(v); upd(); };
+  document.querySelectorAll(".scale").forEach(g=> g.onclick = e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    sc7[g.dataset.k]=+b.dataset.v; upd(); });
+  $("#next").onclick = ()=>{
+    const chosen = act==="first" ? shown[0] : act==="second" ? shown[1] : null;
+    S.stage2.push({id:pick.id, reason:pick.reason, factor:pick.factor, order:i,
+      flip:pick.flip, shownOrder:[shown[0].level, shown[1].level],
+      action:act, chosenLevel: chosen? chosen.level : null, why, bans2,
+      match:sc7.match, variants:{v1:res.data.v1, v2:res.data.v2},
+      tier:res.tier, genMs:res.ms, viewMs:now()-t0});
+    persist(); renderStage2(i+1);
+  };
+}
+
+/* ---------- final survey ---------- */
+function renderSurvey(){
+  const items = [
+    ["general","일상적인 조율은 에이전트끼리 처리해도 괜찮다."],
+    ["boundary","어디까지 맡겨도 되는지 나는 스스로 잘 안다."]
+  ];
+  const picks = [
+    ["age","나이대",["20대","30대","40대","50대 이상"]],
+    ["use","AI 에이전트·비서 사용 경험",["없음","써본 적 있음","가끔 씀","자주 씀"]]
+  ];
+  app.innerHTML = `<div class="scroll">
+    <h2>마지막 ${items.length+picks.length}문항</h2>
+    <p class="sub">느낀 대로 골라주세요.</p>
+    ${items.map(([k,q])=>`<div class="q" data-k="${k}"><p>${esc(q)}</p>
+      <div class="scale" data-k="${k}">${[1,2,3,4,5,6,7].map(v=>`<button data-v="${v}" aria-pressed="false">${v}</button>`).join("")}</div>
+      <div class="anch"><span>전혀 아니다</span><span>매우 그렇다</span></div></div>`).join("")}
+    ${picks.map(([k,q,os])=>`<div class="q" data-k="${k}"><p>${esc(q)}</p>
+      <div class="grid2" data-k="${k}">${os.map(o=>`<button data-v="${esc(o)}" aria-pressed="false">${esc(o)}</button>`).join("")}</div></div>`).join("")}
+    <button class="btn" id="fin" disabled>끝내기</button>
+  </div>`;
+  const ans={}, need=items.length+picks.length;
+  document.querySelectorAll(".scale,.grid2").forEach(g => g.onclick = e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    const v=b.dataset.v; ans[g.dataset.k]= isNaN(+v)? v : +v;
+    $("#fin").disabled = Object.keys(ans).length < need; });
+  $("#fin").onclick = ()=>{ S.survey={...ans,t:now()}; S.status="complete"; S.completedAt=now(); persist(); renderDone(); };
+}
+function renderDone(){
+  const r = typeMe();
+  S.persona = r.key; persist();
+  const url = CONFIG.shareUrl || location.href.split("?")[0];
+  const pct = Math.round(r.deleg*100);
+  app.innerHTML = `<div class="scroll">
+    <p class="sub" style="margin-bottom:4px">당신의 위임 성향은</p>
+    <div style="font-size:64px;line-height:1.1">${r.emoji}</div>
+    <h1 style="margin:6px 0 8px">${esc(r.name)}</h1>
+    <p class="lede" style="font-weight:600">${esc(r.line)}</p>
+    <div class="card"><div class="body" style="font-size:17px">${esc(r.desc)}</div></div>
+    <div class="q">
+      <p style="margin-bottom:10px">당신에게 한마디</p>
+      <div style="font-size:15px">${esc(r.tip)}</div>
+      ${r.note.length?`<div style="font-size:15px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">${r.note.slice(0,2).map(n=>`<p style="margin:0 0 8px">${esc(n)}</p>`).join("")}</div>`:""}
+      <div class="sub" style="font-size:13px;margin:12px 0 0">${S.stage1.length}가지 중 ${r.counts.auto}가지는 그냥 맡기고, ${r.counts.cond}가지는 선을 긋고 맡기고, ${r.counts.self}가지는 직접 하겠다고 하셨어요.</div>
+    </div>
+    <div class="stack" style="display:grid;gap:9px;margin-top:6px">
+      <button class="btn" id="share">결과 공유하기</button>
+      <button class="btn ghost" id="copy">링크 복사하기</button>
+    </div>
+    <p class="sub" id="msg" style="margin-top:10px"></p>
+    <div class="fine" style="margin-top:18px">
+      <p>이 테스트는 "AI에게 무엇까지 맡길 수 있는가"를 알아보는 연구의 일부예요. 보신 에이전트 대화는 연구용으로 생성된 것이며 실제 상대와 주고받은 대화가 아닙니다.</p>
+      <p>${esc(CONFIG.irbText)}</p>
+    </div>
+  </div>`;
+  const text = `나는 ${r.emoji} ${r.name}! "${r.line}"\n당신은 AI에게 어디까지 맡기는 사람인가요?`;
+  $("#share").onclick = async()=>{
+    try{
+      if(navigator.share){ await navigator.share({title:"나한테 맞는 AI 에이전트는?", text, url}); return; }
+      await navigator.clipboard.writeText(text+"\n"+url);
+      $("#msg").textContent = "공유 문구를 복사했어요.";
+    }catch(e){ $("#msg").textContent = "공유가 어려우면 아래 링크를 복사해 주세요: " + url; }
+  };
+  $("#copy").onclick = async()=>{
+    try{ await navigator.clipboard.writeText(url); $("#msg").textContent = "링크를 복사했어요."; }
+    catch(e){ $("#msg").innerHTML = "이 주소를 복사해 주세요: <b>"+esc(url)+"</b>"; }
+  };
+}
+renderConsent();
+window.addEventListener("pagehide", ()=>{ if(S.status!=="complete"&&S.status!=="consent"){ S.status=S.status+"_dropout"; persistBeacon(); } });
+</script>
+</body>
+</html>
