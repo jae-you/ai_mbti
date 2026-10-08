@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What Kind of AI Agent Fits You?</title>
+<meta name="description" content="Scheduling, splitting bills, declining, apologizing — if an AI agent could handle these for you, how far would you let it go?">
+<meta property="og:type" content="website">
+<meta property="og:title" content="What Kind of AI Agent Fits You?">
+<meta property="og:description" content="If an AI agent could handle it for you, how far would you let it go? A 10-minute study.">
+<meta property="og:url" content="https://YOURNAME.github.io/YOURREPO/en/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EFEAE0; --surface:#FFFDF9; --ink:#221F1A; --muted:#6E685C; --line:#DAD3C5;
+  --mine:#1F6F6B; --mine-soft:#DCEEEC; --theirs:#8A8175; --flag:#C2502F;
+  --serif:"IBM Plex Serif",Georgia,serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171613; --surface:#211F1B; --ink:#EFEAE0; --muted:#A09889; --line:#38352E;
+  --mine:#4FB3AD; --mine-soft:#12302E; --theirs:#9A917F; --flag:#E57E5C;
+}}
+:root[data-theme="dark"]{--bg:#171613;--surface:#211F1B;--ink:#EFEAE0;--muted:#A09889;--line:#38352E;--mine:#4FB3AD;--mine-soft:#12302E;--theirs:#9A917F;--flag:#E57E5C}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+#app{height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column}
+.scroll{flex:1;overflow-y:auto;padding:28px 22px 36px}
+button{font:inherit;cursor:pointer;border:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--mine);outline-offset:2px}
+.btn{border-radius:14px;padding:14px 18px;font-weight:600;background:var(--ink);color:var(--bg);width:100%}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,8vw,40px);line-height:1.2;margin:0 0 10px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:700;font-size:21px;margin:0 0 8px}
+.lede{font-size:17px;margin:0 0 24px}
+.sub{color:var(--muted);margin:0 0 20px}
+.fine{font-size:14px;color:var(--muted);background:var(--surface);border-radius:14px;padding:16px 18px;margin-bottom:16px}
+.fine p{margin:0 0 8px}.fine p:last-child{margin:0}
+.check{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:15px}
+.check input{width:20px;height:20px;margin-top:3px;accent-color:var(--ink);flex:none}
+
+.top{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line)}
+.top .step{font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap}
+.track{flex:1;height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--ink);transition:width .25s}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:18px}
+.card .tagline{font-size:13px;color:var(--muted);margin-bottom:8px}
+.card .body{font-family:var(--serif);font-size:19px;line-height:1.5}
+.opts{display:grid;gap:9px}
+.opt{text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;color:var(--ink)}
+.opt b{display:block;font-size:16px;margin-bottom:2px}
+.opt span{font-size:13px;color:var(--muted)}
+.opt[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.opt[aria-pressed="true"] span{color:var(--bg);opacity:.75}
+.why{margin-top:14px}
+.why p{font-size:14px;color:var(--muted);margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:var(--surface);border:1.5px solid var(--line);border-radius:99px;padding:8px 13px;font-size:14px;color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--flag);border-color:var(--flag);color:#fff}
+
+.thread{display:flex;flex-direction:column;gap:10px;margin:16px 0}
+.msg{max-width:88%;padding:11px 15px;border-radius:16px;background:var(--surface);border:1px solid var(--line);white-space:pre-wrap;animation:in .3s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg .lbl{display:block;font-size:11px;font-weight:700;letter-spacing:.02em;margin-bottom:3px;color:var(--theirs)}
+.msg.mine{align-self:flex-end;background:var(--mine-soft);border-color:var(--mine)}
+.msg.mine .lbl{color:var(--mine)}
+.deal{background:var(--surface);border:2px solid var(--mine);border-radius:18px;padding:16px 18px;margin:8px 0 18px}
+.deal h3{margin:0 0 8px;font-size:13px;color:var(--mine);font-weight:700}
+.deal ul{margin:10px 0 0;padding-left:18px;font-size:14px}
+.deal li{margin-bottom:4px}
+.working{color:var(--muted);font-size:14px;padding:10px 0}
+.dots i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:4px;animation:bl 1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,100%{opacity:.25}50%{opacity:1}}
+.scale{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.scale button{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 0;font-weight:600}
+.scale button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.anch{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px;gap:8px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.q p{margin:0 0 12px;font-weight:500}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.grid2 button{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:11px 8px;font-weight:500;font-size:14px;line-height:1.35}
+.grid2 button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cc{font-weight:700;font-size:22px;letter-spacing:.08em;background:var(--surface);border:2px dashed var(--mine);border-radius:14px;padding:14px;text-align:center}
+.err{color:var(--flag);font-size:14px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<script src="stimuli.js"></script>
+<script>
+/* ===================== CONFIG ===================== */
+const CONFIG = {
+  // Apps Script web app URL + shared token (for saving responses; no API key needed)
+  endpoint: "PASTE_YOUR_APPS_SCRIPT_URL_HERE",
+  token: "PASTE_YOUR_SHARED_TOKEN_HERE",
+  gameCount: 3,
+
+  // --- Prolific ---
+  // Completion URL from your Prolific study page, e.g.
+  //   "https://app.prolific.com/submissions/complete?cc=XXXXXXXX"
+  // Leave null to show the completion code on screen instead.
+  prolificCompletionUrl: null,
+  completionCode: null,          // shown if no completion URL is set
+
+  irbText: "Principal investigator: Jaeyoun You, Hanyang University · Contact: sandrine86@hanyang.ac.kr",
+  shareUrl: null                 // public link; falls back to the current address
+};
+
+/* ===================== 16 SCENARIOS =====================
+   block: coord | edge | exception
+   prec: this decision sets a precedent   expr: the act itself is the message
+   Scenarios marked `adapted:true` were substituted rather than translated
+   (no direct equivalent in the Korean original's cultural context).
+========================================================= */
+const SCN = [
+  {id:"C1", block:"coord", prec:0, expr:0,
+   t:"Scheduling a team meeting",
+   s:"Six people on your team have conflicting calendars. A one-hour meeting has to happen sometime next week."},
+  {id:"C2", block:"coord", prec:0, expr:0,
+   t:"Splitting trip expenses",
+   s:"Four of you went on a trip and each paid for different things. The amounts are uneven and need to be settled up."},
+  {id:"C3", block:"coord", prec:0, expr:0,
+   t:"Changing a hotel booking",
+   s:"You want to push your check-in back by one day. The change policy and any fee need to be confirmed with the hotel."},
+  {id:"C4", block:"coord", prec:0, expr:0,
+   t:"Splitting a group order",
+   s:"The people who ordered together need to sort out quantities, a pickup spot, and a time."},
+  {id:"C5", block:"coord", prec:0, expr:0,
+   t:"Arranging a marketplace pickup",
+   s:"The price is already agreed. You just need to settle on a time and place to meet."},
+  {id:"C6", block:"coord", prec:0, expr:0,
+   t:"Comparing moving quotes",
+   s:"You need quotes from three moving companies, compared on date and terms, and one of them picked."},
+  {id:"C7", block:"coord", prec:0, expr:0,
+   t:"Setting a study group order",
+   s:"Everyone in the group has weeks they would rather avoid. The presentation order has to be set."},
+  {id:"C8", block:"coord", prec:0, expr:0,
+   t:"Sorting out a rental car",
+   s:"You need to settle the pickup time and who drives which leg with the people going with you."},
+
+  {id:"E1", block:"edge", prec:0, expr:0, adapted:true,
+   t:"Canceling on a local place",
+   s:"After pushing it back three times, you have to cancel. It's a neighborhood place where the owner knows you by name."},
+  {id:"E2", block:"edge", prec:1, expr:0,
+   t:"Renegotiating scope",
+   s:"Extra requests keep coming in on work you were hired for. The scope and the fee need to be reset."},
+  {id:"E3", block:"edge", prec:0, expr:0, adapted:true,
+   t:"Changing holiday plans",
+   s:"Your parents have already set the holiday schedule, but something has come up and it needs to change."},
+  {id:"E4", block:"edge", prec:1, expr:0,
+   t:"Redistributing workload",
+   s:"Someone on your team has consistently been carrying less. The split needs to be reset."},
+
+  {id:"X1", block:"exception", prec:1, expr:0,
+   t:"Deciding authorship order",
+   s:"The author order on a paper you co-wrote has to be decided. You each see your contributions differently."},
+  {id:"X2", block:"exception", prec:1, expr:0, adapted:true,
+   t:"Turning down a mentor",
+   s:"For the first time, you have to turn down a request from someone who mentored you for years."},
+  {id:"X3", block:"exception", prec:0, expr:1,
+   t:"Sending condolences",
+   s:"Someone you work with has had a death in the family. You need to reach out."},
+  {id:"X4", block:"exception", prec:0, expr:1,
+   t:"Apologizing for your own mistake",
+   s:"Your error cost the other person. You need to apologize and make it right."}
+];
+
+const CHOICES = [
+  {k:"auto", b:"Just let the AI handle it", s:"The AI works it out and you only see the result"},
+  {k:"cond", b:"Set limits first, then let the AI handle it", s:"You say what it must not do, then hand over the rest"},
+  {k:"self", b:"Handle it myself", s:"You say it yourself rather than hand it over"}
+];
+const WHY = ["It would hurt the relationship","It would set a precedent","It only means something if I do it",
+             "I want to set my own terms","The other person would feel slighted","Something else"];
+const BANS = ["Change the amount","Set the date or time","Take on more work for me",
+              "Make a promise on my behalf","Explain my personal circumstances","Apologize or admit fault"];
+
+const PRE = [
+  ["comm1","With people I'm close to, I'd rather take a small loss than make things awkward."],
+  ["comm2","I find it hard to turn down a request."],
+  ["comm3","I'm uncomfortable bringing up who owes whom."],
+  ["comm4","I'd give up my own terms to protect a relationship."],
+  ["dir1","I say what needs to be said, plainly."],
+  ["dir2","It's better to pin down the terms up front."]
+];
+
+const FACTORS = {
+  concession: {key:"concession", label:"Concession authority"},
+  closure:    {key:"closure",    label:"How it closes"}
+};
+const PICKWHY = ["Closer to how I'd have judged it","Less likely to damage the relationship",
+                 "Better terms for me","Leaves room to talk later","Wraps it up cleanly","Something else"];
+
+const PERSONA = {
+  twin:  {tip:"Most things are fine to hand over. Where it's worth a second look is anywhere this one agreement becomes the baseline for the next — how work gets split, what something costs, whose name goes first. Those settle in quietly and last.",
+          emoji:"🧬", name:"The Twin", line:"I hand almost everything to the AI.",
+          desc:"You think most coordination is better off handled for you. Rather than hold on to fiddly work, you'd take the result and move on to the next thing."},
+  chief: {tip:"You have a clear sense of what to hand over and what to keep. Since you're already holding on to the things where feelings are involved, you could probably let go of more of the rest.",
+          emoji:"🗂️", name:"The Chief of Staff", line:"Hand off the work, keep the people.",
+          desc:"You delegate most things but keep anything with a person's feelings attached. The line between what you hand over and what you don't is fairly sharp."},
+  ruler: {tip:"Setting limits and then handing over is the mode today's AI services are built to accept. One thing though: limits get more accurate when you redraw them after seeing a result, not just before.",
+          emoji:"📏", name:"The Boundary-Setter", line:"I draw the line first, then hand it over.",
+          desc:"Handing something over blind makes you uneasy, but doing everything yourself feels wasteful. Naming what it must not do is where you're most comfortable."},
+  dial:  {tip:"Judging each case separately takes effort, but it's also the safest approach. If you settled a rule for the things that come up over and over, you'd have more attention left for the calls that actually need it.",
+          emoji:"🎚️", name:"The Case-by-Case", line:"It depends on the situation.",
+          desc:"You judge each situation on its own. It isn't that you have no standard — it's that your standard shifts with the circumstances."},
+  letter:{tip:"You lead with what gets across rather than what's efficient. The risk is holding on to things that can simply be redone if they go wrong — scheduling, splitting bills. Those are safe to put down.",
+          emoji:"✉️", name:"The Handwritten Note", line:"The things that matter, I say myself.",
+          desc:"You weigh what reaches the other person over what's efficient. Where a relationship is involved, you need to have said it yourself."},
+  wheel: {tip:"Holding the wheel means you miss less, but it also costs you a lot of time. Starting with one or two things that are reversible and have no relationship attached might change how it feels.",
+          emoji:"🕹️", name:"The Driver", line:"I'm still keeping my distance from AI.",
+          desc:"You can see that AI is capable, but you think your own work needs your hands on the wheel. What you hand over, you pick narrowly."}
+};
+
+const BUCKETS = [
+  {k:"expr",  label:"Things like an apology or condolences, where it matters that it came from me",
+   test:x=>x.expr===1},
+  {k:"prec",  label:"Decisions that become the baseline for next time",
+   test:x=>x.prec===1},
+  {k:"edge",  label:"Adjusting or canceling on someone when a relationship is involved",
+   test:x=>x.block==="edge"},
+  {k:"coord", label:"Scheduling, splitting bills, bookings — things that can be redone",
+   test:x=>x.block==="coord"}
+];
+const CHOICE_TEXT = {auto:"Let the AI handle it", cond:"Set limits, then hand over", self:"Handle it myself"};
+
+/* ===================== runtime ===================== */
+const qs = new URLSearchParams(location.search);
+const uid = ()=> crypto.randomUUID? crypto.randomUUID() : String(Date.now())+Math.random().toString(16).slice(2);
+const now = ()=>Date.now();
+const esc = s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sleep = ms=>new Promise(r=>setTimeout(r,ms));
+const $ = s=>document.querySelector(s);
+const app = $("#app");
+const shuffle = a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+
+const S = {
+  sid: uid(),
+  lang: "en",
+  pid: qs.get("PROLIFIC_PID") || qs.get("pid") || null,
+  studyId: qs.get("STUDY_ID") || null,
+  sessionId: qs.get("SESSION_ID") || null,
+  src: qs.get("src") || (qs.get("PROLIFIC_PID") ? "prolific" : null),
+  status:"consent", startedAt:null,
+  pre:null, order:[], stage1:[], picks:[], stage2:[], survey:null, policy:null,
+  persona:null, completedAt:null,
+  client:{ua:navigator.userAgent, w:innerWidth, lang:navigator.language}
+};
+
+const endpointReady = ()=> !!CONFIG.endpoint && /^https?:\/\//.test(CONFIG.endpoint);
+
+async function callApi(payload, tries){
+  tries = tries || 2;
+  let last;
+  for(let k=0; k<tries; k++){
+    try{
+      const r = await fetch(CONFIG.endpoint, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body: JSON.stringify({token: CONFIG.token, ...payload})});
+      const t = await r.text();
+      let j; try{ j = JSON.parse(t); }
+      catch(_){ throw new Error("non_json_response: " + t.slice(0,80)); }
+      if(j && j.ok) return j;
+      throw new Error((j && j.error) || "bad_response");
+    }catch(e){ last = e; await sleep(900*(k+1)); }
+  }
+  throw last;
+}
+let saveChain = Promise.resolve();
+function persist(){
+  const snap = JSON.parse(JSON.stringify(S)); snap.updatedAt = now();
+  saveChain = saveChain.then(async()=>{
+    if(!endpointReady()){ if(!persist._warned){ persist._warned = true;
+      console.info("[setup] CONFIG.endpoint is unset — responses are not being saved. Fine for a local test."); } return; }
+    try{ await callApi({action:"log", session:snap}, 4); }catch(e){ console.warn("log failed:", e.message); }
+  });
+  return saveChain;
+}
+function persistBeacon(){
+  if(!endpointReady() || !navigator.sendBeacon) return;
+  const snap = JSON.parse(JSON.stringify(S)); snap.updatedAt = now();
+  try{ navigator.sendBeacon(CONFIG.endpoint,
+    new Blob([JSON.stringify({token:CONFIG.token, action:"log", session:snap})], {type:"text/plain;charset=utf-8"})); }catch(e){}
+}
+function getStimulus(id, factor){
+  if(typeof STIMULI === "undefined"){
+    console.error("stimuli.js did not load. Keep it in the same folder and serve over http.");
+    return {error:"stimuli_not_loaded"};
+  }
+  const v = STIMULI[id + "|" + factor];
+  if(!v || !v.v1 || !v.v2) return {error:"missing_stimulus"};
+  return {data:{v1:v.v1, v2:v.v2}, fixed:true};
+}
+
+/* ===================== screens ===================== */
+function renderConsent(){
+  const isProlific = !!S.pid;
+  app.innerHTML = `<div class="scroll">
+    <h1>What kind of<br>AI agent fits you?</h1>
+    <p class="lede">Scheduling, splitting bills, turning someone down, apologizing. If an AI agent could handle these for you, how far would you let it go? At the end you'll get your delegation profile.</p>
+    <div class="fine" style="border:2px solid var(--mine)">
+      <p><b style="color:var(--ink)">Please answer with one thing assumed.</b></p>
+      <p>This AI handles whatever you give it <b style="color:var(--ink)">without mistakes.</b> It doesn't miscalculate, miss a date, or leave out a condition, and it writes well. It doesn't leak anything or say anything strange.</p>
+      <p>So you don't need to worry about it doing a bad job. The only question is <b style="color:var(--ink)">whether there are things you'd still want to do yourself even when the AI would do them perfectly.</b></p>
+    </div>
+    <div class="fine">
+      <p>This is a research study on how people decide what to delegate to AI agents. It takes about 10 minutes.</p>
+      <p>Your responses are recorded anonymously. We do not collect your name, email, or any contact information. Participation is voluntary and you can close the window at any time without penalty.${isProlific ? " Your Prolific ID is recorded only to pay you and is not linked to your responses in any published results." : ""}</p>
+      <p>${esc(CONFIG.irbText)}</p>
+    </div>
+    <label class="check"><input type="checkbox" id="c1"> I am 18 or older and agree to take part.</label>
+    <div style="margin-top:16px"><button class="btn" id="go" disabled>Start</button></div>
+  </div>`;
+  $("#c1").onchange = e=> $("#go").disabled = !e.target.checked;
+  $("#go").onclick = ()=>{ S.status="pre"; S.startedAt=now(); persist(); renderPre(); };
+}
+
+function renderPre(){
+  app.innerHTML = `<div class="scroll">
+    <h2>First, ${PRE.length} quick questions</h2>
+    <p class="sub">Pick whatever is closest to how you usually are.</p>
+    ${PRE.map(([k,q])=>`<div class="q"><p>${esc(q)}</p>
+      <div class="scale" data-k="${k}" role="group" aria-label="${esc(q)}">${[1,2,3,4,5,6,7].map(v=>`<button data-v="${v}" aria-pressed="false">${v}</button>`).join("")}</div>
+      <div class="anch"><span>Not at all</span><span>Very much</span></div></div>`).join("")}
+    <button class="btn" id="go" disabled>Next</button></div>`;
+  const ans={};
+  document.querySelectorAll(".scale").forEach(g=> g.onclick = e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    ans[g.dataset.k]=+b.dataset.v;
+    $("#go").disabled = Object.keys(ans).length < PRE.length; });
+  $("#go").onclick = ()=>{
+    S.pre = ans; S.status="stage1"; S.order = shuffle(SCN.map(s=>s.id));
+    persist(); renderStage1(0);
+  };
+}
+
+/* ---------- stage 1 ---------- */
+function renderStage1(i){
+  if(i >= S.order.length) return renderBridge();
+  const sc = SCN.find(s=>s.id===S.order[i]);
+  const shown = now();
+  app.innerHTML = `
+    <div class="top"><span class="step">${i+1} / ${S.order.length}</span><div class="track"><i style="width:${i/S.order.length*100}%"></i></div></div>
+    <div class="scroll">
+      <div class="card"><div class="tagline">${esc(sc.t)}</div><div class="body">${esc(sc.s)}</div></div>
+      <p class="sub" style="margin-bottom:12px">The AI would handle this without mistakes. Even so, how would you want it done?</p>
+      <div class="opts" id="opts">
+        ${CHOICES.map(c=>`<button class="opt" data-k="${c.k}" aria-pressed="false"><b>${esc(c.b)}</b><span>${esc(c.s)}</span></button>`).join("")}
+      </div>
+      <div class="why" id="why" hidden>
+        <p>Pick the single biggest reason.</p>
+        <div class="chips" id="chips">${WHY.map(w=>`<button class="chip" data-w="${esc(w)}" aria-pressed="false">${esc(w)}</button>`).join("")}</div>
+      </div>
+      <div class="why" id="ban" hidden>
+        <p>Pick what the AI must not do. You can choose more than one.</p>
+        <div class="chips" id="bans">${BANS.map(w=>`<button class="chip" data-b="${esc(w)}" aria-pressed="false">${esc(w)}</button>`).join("")}</div>
+      </div>
+      <div style="margin-top:20px"><button class="btn" id="next" disabled>Next</button></div>
+    </div>`;
+  let choice=null, why=null, bans=[], tFirst=null;
+  const upd = ()=> $("#next").disabled = !(choice==="auto" || (choice==="self" && why) || (choice==="cond" && bans.length));
+  $("#opts").onclick = e=>{
+    const b = e.target.closest(".opt"); if(!b) return;
+    if(tFirst===null) tFirst = now();
+    choice = b.dataset.k;
+    document.querySelectorAll(".opt").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    $("#why").hidden = (choice!=="self");
+    $("#ban").hidden = (choice!=="cond");
+    if(choice!=="self"){ why=null; document.querySelectorAll("#chips .chip").forEach(c=>c.setAttribute("aria-pressed","false")); }
+    if(choice!=="cond"){ bans=[]; document.querySelectorAll("#bans .chip").forEach(c=>c.setAttribute("aria-pressed","false")); }
+    upd();
+  };
+  $("#chips").onclick = e=>{
+    const b = e.target.closest(".chip"); if(!b) return;
+    why = b.dataset.w;
+    document.querySelectorAll("#chips .chip").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    upd();
+  };
+  $("#bans").onclick = e=>{
+    const b = e.target.closest(".chip"); if(!b) return;
+    const v = b.dataset.b, on = b.getAttribute("aria-pressed")==="true";
+    b.setAttribute("aria-pressed", String(!on));
+    bans = on ? bans.filter(x=>x!==v) : bans.concat(v);
+    upd();
+  };
+  $("#next").onclick = ()=>{
+    S.stage1.push({id:sc.id, block:sc.block, choice, why, bans, shown, tFirst, tDone:now(), pos:i});
+    if(i+1 >= S.order.length) persist();
+    renderStage1(i+1);
+  };
+}
+
+/* ---------- bridge ---------- */
+function pickScenarios(){
+  const by = k => shuffle(S.stage1.filter(a=>a.choice===k));
+  const picks = [];
+  const autos = by("auto"), selfs = by("self"), conds = by("cond");
+  if(autos[0]) picks.push({id:autos[0].id, reason:"said_auto"});
+  if(selfs[0]) picks.push({id:selfs[0].id, reason:"said_self"});
+  else if(conds[0]) picks.push({id:conds[0].id, reason:"said_cond"});
+  const rest = shuffle(S.stage1.filter(a=>!picks.some(p=>p.id===a.id)));
+  while(picks.length < CONFIG.gameCount && rest.length) picks.push({id:rest.shift().id, reason:"random"});
+  const out = shuffle(picks).slice(0, CONFIG.gameCount);
+  const fs = shuffle(["concession","closure","concession","closure"]);
+  out.forEach((p,i)=>{ p.factor = fs[i]; p.flip = Math.random()<0.5; });
+  return out;
+}
+function renderBridge(){
+  S.picks = pickScenarios(); S.status="stage2"; persist();
+  prefetch(0);
+  app.innerHTML = `<div class="scroll">
+    <h2>Now we actually hand it over</h2>
+    <p class="lede">We took ${CONFIG.gameCount} of the situations you just saw and had both sides' agents handle them. No person stepped in. Each one came back two different ways.</p>
+    <p class="sub">Both were handled without mistakes. Which one would you send out under your name?</p>
+    <button class="btn" id="go">See the first one</button>
+  </div>`;
+  $("#go").onclick = ()=> renderStage2(0);
+}
+
+/* ---------- stage 2 ---------- */
+const cache = {};
+function prefetch(i){
+  const p = S.picks[i]; if(!p || cache[p.id]) return;
+  cache[p.id] = getStimulus(p.id, p.factor);
+}
+async function renderStage2(i){
+  if(i >= S.picks.length) return renderSurvey();
+  const pick = S.picks[i], sc = SCN.find(s=>s.id===pick.id);
+  prefetch(i); prefetch(i+1);
+  app.innerHTML = `
+    <div class="top"><span class="step">${i+1} / ${S.picks.length}</span><div class="track"><i style="width:${i/S.picks.length*100}%"></i></div></div>
+    <div class="scroll" id="sc">
+      <div class="card"><div class="tagline">${esc(sc.t)}</div><div class="body">${esc(sc.s)}</div></div>
+      <p class="working dots" id="w">The agents are working it out <i></i><i></i><i></i></p>
+      <div id="body"></div>
+    </div>`;
+  await sleep(600);
+  const res = cache[pick.id];
+  $("#w").remove();
+  const ok = res && !res.error && res.data && res.data.v1 && res.data.v2;
+  if(!ok){
+    $("#body").innerHTML = `<p class="err">Couldn't load this one. (check stimuli.js)</p><button class="btn" id="skip">Next</button>`;
+    S.stage2.push({id:pick.id, reason:pick.reason, factor:pick.factor, error:true});
+    persist(); $("#skip").onclick = ()=> renderStage2(i+1); return;
+  }
+  const f = FACTORS[pick.factor];
+  const levels = pick.factor === "concession" ? ["hold","yield"] : ["closed","open"];
+  const lv = [{lv:"v1", ...res.data.v1, level:levels[0]}, {lv:"v2", ...res.data.v2, level:levels[1]}];
+  const shown = pick.flip ? [lv[1], lv[0]] : [lv[0], lv[1]];
+  const t0 = now();
+  const block = (v, n)=>{
+    const cm = Array.isArray(v.commitments)? v.commitments.filter(Boolean):[];
+    return `<h2 style="margin:18px 0 6px">Result ${n}</h2>
+      <div class="thread">${(v.turns||[]).slice(0,6).map(t=>`
+        <div class="msg${t.speaker==="mine"?" mine":""}"><span class="lbl">${t.speaker==="mine"?"YOUR AGENT":"THEIR AGENT"}</span>${esc(t.text)}</div>`).join("")}</div>
+      <div class="deal"><h3>WHAT THEY AGREED</h3><div>${esc(v.agreement||"")}</div>
+        ${cm.length?`<ul>${cm.map(c=>`<li>${esc(c)}</li>`).join("")}</ul>`:""}</div>`;
+  };
+  $("#body").innerHTML = `
+    ${block(shown[0],"1")}${block(shown[1],"2")}
+    <p class="sub" style="margin:22px 0 10px">Which one would you send out under your name?</p>
+    <div class="opts" id="act">
+      <button class="opt" data-a="first" aria-pressed="false"><b>Result 1</b><span>Send it as is</span></button>
+      <button class="opt" data-a="second" aria-pressed="false"><b>Result 2</b><span>Send it as is</span></button>
+      <button class="opt" data-a="neither" aria-pressed="false"><b>Neither</b><span>I couldn't put my name on either one</span></button>
+    </div>
+    <div class="why" id="whywrap" hidden>
+      <p>Pick the single biggest reason you chose it.</p>
+      <div class="chips" id="chips">${PICKWHY.map(w=>`<button class="chip" data-w="${esc(w)}" aria-pressed="false">${esc(w)}</button>`).join("")}</div>
+    </div>
+    <div class="why" id="banwrap" hidden>
+      <p>Pick what the AI should not have done. You can choose more than one.</p>
+      <div class="chips" id="bans2">${BANS.map(w=>`<button class="chip" data-b="${esc(w)}" aria-pressed="false">${esc(w)}</button>`).join("")}</div>
+    </div>
+    <div class="q" style="margin-top:18px"><p>The one I picked is close to what I'd have done myself.</p>
+      <div class="scale" data-k="match">${[1,2,3,4,5,6,7].map(v=>`<button data-v="${v}" aria-pressed="false">${v}</button>`).join("")}</div>
+      <div class="anch"><span>Not at all</span><span>Very much</span></div></div>
+    <button class="btn" id="next" disabled>Next</button>`;
+  $("#sc").scrollTop = 0;
+  let act=null, why=null, bans2=[]; const sc7={};
+  const upd = ()=> $("#next").disabled = !(act && sc7.match && (act==="neither" ? bans2.length : why));
+  $("#act").onclick = e=>{
+    const b = e.target.closest(".opt"); if(!b) return; act = b.dataset.a;
+    document.querySelectorAll("#act .opt").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    $("#whywrap").hidden = (act==="neither");
+    $("#banwrap").hidden = (act!=="neither");
+    if(act==="neither"){ why=null; document.querySelectorAll("#chips .chip").forEach(c=>c.setAttribute("aria-pressed","false")); }
+    else { bans2=[]; document.querySelectorAll("#bans2 .chip").forEach(c=>c.setAttribute("aria-pressed","false")); }
+    upd();
+  };
+  $("#chips").onclick = e=>{ const b=e.target.closest(".chip"); if(!b) return; why=b.dataset.w;
+    document.querySelectorAll("#chips .chip").forEach(x=>x.setAttribute("aria-pressed", x===b)); upd(); };
+  $("#bans2").onclick = e=>{ const b=e.target.closest(".chip"); if(!b) return;
+    const v=b.dataset.b, on=b.getAttribute("aria-pressed")==="true";
+    b.setAttribute("aria-pressed", String(!on));
+    bans2 = on ? bans2.filter(x=>x!==v) : bans2.concat(v); upd(); };
+  document.querySelectorAll(".scale").forEach(g=> g.onclick = e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    sc7[g.dataset.k]=+b.dataset.v; upd(); });
+  $("#next").onclick = ()=>{
+    const chosen = act==="first" ? shown[0] : act==="second" ? shown[1] : null;
+    S.stage2.push({id:pick.id, reason:pick.reason, factor:pick.factor, order:i,
+      flip:pick.flip, shownOrder:[shown[0].level, shown[1].level],
+      action:act, chosenLevel: chosen? chosen.level : null, why, bans2,
+      match:sc7.match, viewMs:now()-t0});
+    persist(); renderStage2(i+1);
+  };
+}
+
+/* ---------- final survey ---------- */
+function renderSurvey(){
+  const items = [
+    ["general","Everyday coordination is fine to let AI agents handle between themselves."],
+    ["boundary","I have a good sense of where my own limits are on this."]
+  ];
+  const picks = [
+    ["age","Your age", ["18–29","30–39","40–49","50 or older"]],
+    ["use","How much you've used AI agents or assistants", ["Never","Tried it once or twice","Now and then","Often"]],
+    ["usyears","How long have you lived in the United States?", ["All my life","More than 10 years","10 years or less","Prefer not to say"]]
+  ];
+  app.innerHTML = `<div class="scroll">
+    <h2>Last ${items.length+picks.length} questions</h2>
+    <p class="sub">Whatever feels right.</p>
+    ${items.map(([k,q])=>`<div class="q"><p>${esc(q)}</p>
+      <div class="scale" data-k="${k}">${[1,2,3,4,5,6,7].map(v=>`<button data-v="${v}" aria-pressed="false">${v}</button>`).join("")}</div>
+      <div class="anch"><span>Not at all</span><span>Very much</span></div></div>`).join("")}
+    ${picks.map(([k,q,os])=>`<div class="q"><p>${esc(q)}</p>
+      <div class="grid2" data-k="${k}">${os.map(o=>`<button data-v="${esc(o)}" aria-pressed="false">${esc(o)}</button>`).join("")}</div></div>`).join("")}
+    <button class="btn" id="fin" disabled>Next</button>
+  </div>`;
+  const ans={}, need=items.length+picks.length;
+  document.querySelectorAll(".scale,.grid2").forEach(g=> g.onclick = e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    const v=b.dataset.v; ans[g.dataset.k]= isNaN(+v)? v : +v;
+    $("#fin").disabled = Object.keys(ans).length < need; });
+  $("#fin").onclick = ()=>{ S.survey={...ans,t:now()}; persist(); renderPolicy(); };
+}
+
+/* ---------- policy confirmation ---------- */
+function bucketOf(sc){
+  for(const b of BUCKETS) if(b.test(sc)) return b.k;
+  return "coord";
+}
+function derivePolicy(){
+  const byB = {};
+  S.stage1.forEach(a=>{
+    const sc = SCN.find(x=>x.id===a.id); if(!sc) return;
+    const k = bucketOf(sc);
+    (byB[k] = byB[k] || []).push(a.choice);
+  });
+  const rules = BUCKETS.filter(b=>byB[b.k] && byB[b.k].length).map(b=>{
+    const cnt = {auto:0, cond:0, self:0};
+    byB[b.k].forEach(c=> cnt[c]!==undefined && cnt[c]++);
+    const top = Object.keys(cnt).sort((x,y)=> cnt[y]-cnt[x] || ["self","cond","auto"].indexOf(y)-["self","cond","auto"].indexOf(x))[0];
+    const n = byB[b.k].length;
+    return {bucket:b.k, label:b.label, derived:top, n, agree:+(cnt[top]/n).toFixed(2)};
+  });
+  const banCount = {};
+  S.stage1.forEach(a=>(a.bans||[]).forEach(x=> banCount[x]=(banCount[x]||0)+1));
+  S.stage2.forEach(a=>(a.bans2||[]).forEach(x=> banCount[x]=(banCount[x]||0)+1));
+  const bans = Object.entries(banCount).sort((a,b)=>b[1]-a[1]).filter(e=>e[1]>=2).slice(0,3).map(e=>e[0]);
+  return {rules, bans};
+}
+function renderPolicy(){
+  const pol = derivePolicy();
+  app.innerHTML = `<div class="scroll">
+    <h2>Your delegation policy</h2>
+    <p class="sub">These rules came out of your answers. Fix any line that's wrong.</p>
+    ${pol.rules.map((r,i)=>`
+      <div class="q" data-i="${i}">
+        <p style="margin-bottom:6px">${esc(r.label)}</p>
+        <div style="font-weight:700;margin-bottom:12px">→ ${esc(CHOICE_TEXT[r.derived])}</div>
+        <div class="grid2" data-role="verdict">
+          <button data-v="ok" aria-pressed="false">That's right</button>
+          <button data-v="no" aria-pressed="false">Not quite</button>
+        </div>
+        <div class="why fix" hidden style="margin-top:10px">
+          <p>Which is it, then?</p>
+          <div class="chips" data-role="fix">
+            ${["auto","cond","self"].map(k=>`<button class="chip" data-k="${k}" aria-pressed="false">${esc(CHOICE_TEXT[k])}</button>`).join("")}
+          </div>
+        </div>
+      </div>`).join("")}
+    ${pol.bans.length?`<div class="q"><p style="margin-bottom:6px">What the AI should never do, in any situation</p>
+      <div style="font-weight:700">→ ${esc(pol.bans.join(", "))}</div></div>`:""}
+    <button class="btn" id="fin" disabled>See my result</button>
+  </div>`;
+  const state = pol.rules.map(()=>({verdict:null, fixed:null}));
+  const upd = ()=> $("#fin").disabled = !state.every(x=> x.verdict==="ok" || (x.verdict==="no" && x.fixed));
+  document.querySelectorAll(".q[data-i]").forEach(q=>{
+    const i = +q.dataset.i;
+    q.addEventListener("click", e=>{
+      const b = e.target.closest("button"); if(!b) return;
+      const grp = b.parentElement.dataset.role;
+      if(grp==="verdict"){
+        state[i].verdict = b.dataset.v;
+        b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+        q.querySelector(".fix").hidden = (b.dataset.v!=="no");
+        if(b.dataset.v==="ok"){ state[i].fixed=null; q.querySelectorAll('[data-role="fix"] .chip').forEach(c=>c.setAttribute("aria-pressed","false")); }
+      }
+      if(grp==="fix"){
+        state[i].fixed = b.dataset.k;
+        b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+      }
+      upd();
+    });
+  });
+  $("#fin").onclick = ()=>{
+    pol.rules.forEach((r,i)=>{ r.confirmed = state[i].verdict==="ok"; r.corrected = state[i].fixed || null; });
+    pol.accuracy = +(pol.rules.filter(r=>r.confirmed).length / pol.rules.length).toFixed(2);
+    S.policy = pol; S.status="complete"; S.completedAt=now(); persist(); renderDone();
+  };
+}
+function policyJSON(){
+  const p = S.policy || derivePolicy();
+  return JSON.stringify({
+    version:"1.0",
+    created:new Date().toISOString().slice(0,10),
+    delegation_rules:(p.rules||[]).map(r=>({task_class:r.bucket, description:r.label,
+      level:r.corrected || r.derived, source: r.corrected? "user_corrected":"derived"})),
+    never_allow:p.bans || [],
+    notes:"A personal delegation policy you can hand to an agent. level: auto / cond (limits first) / self"
+  }, null, 2);
+}
+
+/* ---------- result ---------- */
+function typeMe(){
+  const n = S.stage1.length || 1;
+  const c = {auto:0, cond:0, self:0};
+  S.stage1.forEach(a=> c[a.choice]!==undefined && c[a.choice]++);
+  const deleg = (c.auto + c.cond*0.5) / n;
+  const p = S.pre || {};
+  const comm = ((p.comm1||4)+(p.comm2||4)+(p.comm3||4)+(p.comm4||4))/4;
+  const dir  = ((p.dir1||4)+(p.dir2||4))/2;
+  const rel  = comm - dir;
+  let key;
+  if(deleg >= .7) key = rel > 0 ? "chief" : "twin";
+  else if(deleg >= .4) key = (c.cond >= c.self) ? "ruler" : "dial";
+  else key = rel > 0 ? "letter" : "wheel";
+
+  const note = [];
+  const precIds = SCN.filter(x=>x.prec).map(x=>x.id);
+  const gavePrec = S.stage1.filter(a=>a.choice==="auto" && precIds.includes(a.id)).length;
+  const keptCoord = S.stage1.filter(a=>a.choice==="self" && (SCN.find(x=>x.id===a.id)||{}).block==="coord").length;
+  const refused = S.stage2.filter(a=>a.action==="neither").length;
+  const banCount = {};
+  S.stage1.forEach(a=>(a.bans||[]).forEach(b=> banCount[b]=(banCount[b]||0)+1));
+  S.stage2.forEach(a=>(a.bans2||[]).forEach(b=> banCount[b]=(banCount[b]||0)+1));
+  const topBan = Object.entries(banCount).sort((x,y)=>y[1]-x[1])[0];
+
+  if(gavePrec >= 2) note.push("You handed over several decisions that become the baseline for next time. Those are worth a second look.");
+  if(keptCoord >= 3) note.push("You're holding on to things that could simply be redone if they went wrong. There's little to lose in putting those down first.");
+  if(topBan) note.push(`The thing you blocked most often was “${topBan[0]}.” That seems to be the line you don't give up.`);
+  if(refused) note.push("There was a situation where neither result was something you'd put your name on. That's probably where you think a person has to do it.");
+  return {key, ...PERSONA[key], deleg, counts:c, note};
+}
+
+function renderDone(){
+  const r = typeMe();
+  S.persona = r.key; persist();
+  const url = CONFIG.shareUrl || location.href.split("?")[0];
+  const code = CONFIG.completionCode || S.sid.slice(0,8).toUpperCase();
+  const isProlific = !!S.pid;
+  app.innerHTML = `<div class="scroll">
+    <p class="sub" style="margin-bottom:4px">Your delegation profile</p>
+    <div style="font-size:64px;line-height:1.1">${r.emoji}</div>
+    <h1 style="margin:6px 0 8px">${esc(r.name)}</h1>
+    <p class="lede" style="font-weight:600">“${esc(r.line)}”</p>
+    <div class="card"><div class="body" style="font-size:17px">${esc(r.desc)}</div></div>
+    <div class="q">
+      <p style="margin-bottom:10px">One thing for you</p>
+      <div style="font-size:15px">${esc(r.tip)}</div>
+      ${r.note.length?`<div style="font-size:15px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">${r.note.slice(0,2).map(n=>`<p style="margin:0 0 8px">${esc(n)}</p>`).join("")}</div>`:""}
+      <div class="sub" style="font-size:13px;margin:12px 0 0">Of ${S.stage1.length} situations, you let the AI handle ${r.counts.auto}, set limits on ${r.counts.cond}, and kept ${r.counts.self}.</div>
+    </div>
+
+    ${isProlific ? `
+      <div style="margin:18px 0 6px">
+        ${CONFIG.prolificCompletionUrl
+          ? `<button class="btn" id="finish">Finish and return to Prolific</button>
+             <p class="sub" style="font-size:13px;margin-top:10px">You must click this to be paid. If nothing happens, use this link:
+             <a href="${esc(CONFIG.prolificCompletionUrl)}" style="color:var(--mine)">return to Prolific</a>.</p>`
+          : `<p class="sub" style="margin-bottom:8px">Your completion code — paste this into Prolific to be paid.</p>
+             <div class="cc">${esc(code)}</div>`}
+      </div>` : `
+      <div style="display:grid;gap:9px;margin-top:6px">
+        <button class="btn" id="share">Share my result</button>
+        <button class="btn ghost" id="copy">Copy link</button>
+        <button class="btn ghost" id="pol">Download my delegation policy</button>
+      </div>
+      <p class="sub" id="msg" style="margin-top:10px"></p>`}
+
+    <div class="fine" style="margin-top:18px">
+      <p>This was part of a study on what people will and won't delegate to AI agents. The agent conversations you saw were written for this research — they are not real exchanges with another person, and no real agent acted on your behalf.</p>
+      <p>${esc(CONFIG.irbText)}</p>
+    </div>
+  </div>`;
+
+  if(isProlific && CONFIG.prolificCompletionUrl){
+    $("#finish").onclick = ()=>{ location.href = CONFIG.prolificCompletionUrl; };
+  }
+  if(!isProlific){
+    const text = `I'm ${r.emoji} ${r.name}! “${r.line}”\nHow far would you let an AI agent go?`;
+    $("#share").onclick = async()=>{
+      try{
+        if(navigator.share){ await navigator.share({title:"What kind of AI agent fits you?", text, url}); return; }
+        await navigator.clipboard.writeText(text+"\n"+url);
+        $("#msg").textContent = "Copied — paste it anywhere.";
+      }catch(e){ $("#msg").textContent = "Copy this link to share: " + url; }
+    };
+    $("#copy").onclick = async()=>{
+      try{ await navigator.clipboard.writeText(url); $("#msg").textContent = "Link copied."; }
+      catch(e){ $("#msg").innerHTML = "Copy this address: <b>"+esc(url)+"</b>"; }
+    };
+    $("#pol").onclick = ()=>{
+      const txt = policyJSON();
+      try{
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([txt], {type:"application/json"}));
+        a.download = "my-delegation-policy.json"; a.click(); URL.revokeObjectURL(a.href);
+        $("#msg").textContent = "Saved in a format you could hand to an agent.";
+      }catch(e){
+        navigator.clipboard.writeText(txt).then(()=> $("#msg").textContent = "Policy copied.");
+      }
+    };
+  }
+}
+
+renderConsent();
+window.addEventListener("pagehide", ()=>{ if(S.status!=="complete"&&S.status!=="consent"){ S.status=S.status+"_dropout"; persistBeacon(); } });
+</script>
+</body>
+</html>
